@@ -408,6 +408,30 @@
         }
 
         /**
+         * _parseTwitterKeys
+         * 
+         * @access protected
+         * @return array
+         */
+        protected function _parseTwitterKeys()
+        {
+            preg_match_all('/([\'|"]{1})twitter:([a-zA-Z0-9\-:_]{1,25})\1/', $this->_body, $keys);
+            return array_pop($keys);
+        }
+
+        /**
+         * _parseArticleKeys
+         * 
+         * @access protected
+         * @return array
+         */
+        protected function _parseArticleKeys()
+        {
+            preg_match_all('/([\'|"]{1})article:([a-zA-Z0-9\-:_]{1,25})\1/', $this->_body, $keys);
+            return array_pop($keys);
+        }
+
+        /**
          * _parseSocialNetwork
          * 
          * @access public
@@ -568,14 +592,16 @@
             // return relevant meta data
             return array(
                 'base' => $this->getBase(),
-                'charset' => $this->getCharset(),
-                'favicon' => $this->getFavicon(),
+                //'charset' => $this->getCharset(),
+                //'favicon' => $this->getFavicon(),
                 'meta' => array(
                     'description' => $this->getDescription(),
                     'keywords' => $this->getKeywords()
                 ),
-                'images' => $this->getImages(),
+                //'images' => $this->getImages(),
                 'openGraph' => $this->getOpenGraph(),
+                'twitter' => $this->getTwitter(),
+                'article' => $this->getArticle(),
                 'social' => $this->getSocial(),
                 'title' => $this->getTitle(),
                 'url' => $this->getURL()
@@ -656,6 +682,54 @@
             $keys = $this->_parseOpenGraphKeys();
             foreach ($keys as $key) {
                 $graph[$key] = $this->_parseMetaTag('og:' . ($key), 'property');
+            }
+
+            // resolve path to open graph image, if found
+            if (in_array('image', $keys)) {
+                $graph['imagePath'] = $this->_resolveFullPath(
+                    $graph['image'],
+                    $this->getBase()
+                );
+            }
+            return $graph;
+        }
+
+        /**
+         * getTwitter
+         * 
+         * @access public
+         * @return array
+         */
+        public function getTwitter()
+        {
+            $graph = array();
+            $keys = $this->_parseTwitterKeys();
+            foreach ($keys as $key) {
+                $graph[$key] = $this->_parseMetaTag('twitter:' . ($key), 'name');
+            }
+
+            // resolve path to open graph image, if found
+            if (in_array('image', $keys)) {
+                $graph['imagePath'] = $this->_resolveFullPath(
+                    $graph['image'],
+                    $this->getBase()
+                );
+            }
+            return $graph;
+        }
+
+        /**
+         * getArticle
+         * 
+         * @access public
+         * @return array
+         */
+        public function getArticle()
+        {
+            $graph = array();
+            $keys = $this->_parseArticleKeys();
+            foreach ($keys as $key) {
+                $graph[$key] = $this->_parseMetaTag('article:' . ($key), 'property');
             }
 
             // resolve path to open graph image, if found
